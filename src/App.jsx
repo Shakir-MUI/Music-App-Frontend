@@ -1,7 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, Play, Pause, SkipBack, SkipForward, Volume2, Heart, Music } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Search,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  Heart,
+  Music,
+} from "lucide-react";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
+const API = import.meta.env.VITE_API_BASE_URL;
 
 // Custom Styles Component
 const CustomStyles = () => (
@@ -475,16 +485,33 @@ const Navbar = () => {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <div
+            className="collapse navbar-collapse justify-content-end"
+            id="navbarNav"
+          >
             <ul className="navbar-nav">
               <li className="nav-item">
-                <a className="nav-link nav-link-custom" href="#">Home</a>
+                <a className="nav-link nav-link-custom" href="#">
+                  Home
+                </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link nav-link-custom" href="#">Library</a>
+                <a
+                  className="nav-link nav-link-custom"
+                  href="#"
+                  onClick={() => onLibraryClick()}
+                >
+                  Library
+                </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link nav-link-custom" href="#">Favorites</a>
+                <a
+                  className="nav-link nav-link-custom"
+                  href="#"
+                  onClick={() => onFavoritesClick()}
+                >
+                  Favorites
+                </a>
               </li>
             </ul>
           </div>
@@ -496,7 +523,7 @@ const Navbar = () => {
 
 // SearchBar Component
 const SearchBar = ({ onSearch, isLoading }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -505,7 +532,7 @@ const SearchBar = ({ onSearch, isLoading }) => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -522,7 +549,11 @@ const SearchBar = ({ onSearch, isLoading }) => {
           placeholder="Search for songs, artists, albums..."
           disabled={isLoading}
         />
-        <button onClick={handleSearch} className="search-btn" disabled={isLoading}>
+        <button
+          onClick={handleSearch}
+          className="search-btn"
+          disabled={isLoading}
+        >
           <Search size={22} color="white" />
         </button>
       </div>
@@ -542,7 +573,13 @@ const Loader = () => {
 };
 
 // SongList Component
-const SongList = ({ songs, onSelectSong, currentSong, onToggleFavorite, favorites }) => {
+const SongList = ({
+  songs,
+  onSelectSong,
+  currentSong,
+  onToggleFavorite,
+  favorites,
+}) => {
   if (!songs || songs.length === 0) {
     return (
       <div className="no-results">
@@ -553,14 +590,45 @@ const SongList = ({ songs, onSelectSong, currentSong, onToggleFavorite, favorite
     );
   }
 
+  // Library and Favorites
+  const fetchLibrary = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API}/api/library/`);
+      const data = await res.json();
+      setSongs(data.songs || []);
+    } catch (err) {
+      console.error("Error fetching library:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API}/api/favorites/`);
+      const data = await res.json();
+      setSongs(data.favorites || []);
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="row g-4 mb-5">
       {songs.map((song, index) => (
         <div key={index} className="col-12 col-sm-6 col-lg-4">
-          <div className={`card song-card ${currentSong?.trackId === song.trackId ? 'active' : ''}`}>
+          <div
+            className={`card song-card ${
+              currentSong?.trackId === song.trackId ? "active" : ""
+            }`}
+          >
             <div className="song-image-wrapper">
               <img
-                src={song.artworkUrl100 || 'https://via.placeholder.com/300'}
+                src={song.artworkUrl100 || "https://via.placeholder.com/300"}
                 alt={song.trackName}
                 className="song-image"
               />
@@ -585,7 +653,11 @@ const SongList = ({ songs, onSelectSong, currentSong, onToggleFavorite, favorite
                 >
                   <Heart
                     size={24}
-                    fill={favorites.some(f => f.trackId === song.trackId) ? 'currentColor' : 'none'}
+                    fill={
+                      favorites.some((f) => f.trackId === song.trackId)
+                        ? "currentColor"
+                        : "none"
+                    }
                   />
                 </button>
               </div>
@@ -643,17 +715,19 @@ const MusicPlayer = ({ song }) => {
   };
 
   const formatTime = (time) => {
-    if (isNaN(time)) return '0:00';
+    if (isNaN(time)) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   if (!song) {
     return (
       <div className="music-player">
         <div className="container">
-          <p className="text-center text-white mb-0">Select a song to start playing</p>
+          <p className="text-center text-white mb-0">
+            Select a song to start playing
+          </p>
         </div>
       </div>
     );
@@ -668,7 +742,7 @@ const MusicPlayer = ({ song }) => {
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => setIsPlaying(false)}
       />
-      
+
       <div className="container">
         <div className="row align-items-center">
           <div className="col-md-3">
@@ -690,7 +764,10 @@ const MusicPlayer = ({ song }) => {
               <button className="control-btn">
                 <SkipBack size={24} />
               </button>
-              <button onClick={togglePlay} className="control-btn play-pause-btn">
+              <button
+                onClick={togglePlay}
+                className="control-btn play-pause-btn"
+              >
                 {isPlaying ? <Pause size={28} /> : <Play size={28} />}
               </button>
               <button className="control-btn">
@@ -722,7 +799,7 @@ const MusicPlayer = ({ song }) => {
                 step="0.01"
                 value={volume}
                 onChange={handleVolumeChange}
-                style={{ width: '100px' }}
+                style={{ width: "100px" }}
               />
             </div>
           </div>
@@ -734,7 +811,7 @@ const MusicPlayer = ({ song }) => {
 
 // LyricsDisplay Component
 const LyricsDisplay = ({ song }) => {
-  const [lyrics, setLyrics] = useState('');
+  const [lyrics, setLyrics] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -747,12 +824,14 @@ const LyricsDisplay = ({ song }) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://api.lyrics.ovh/v1/${encodeURIComponent(song.artistName)}/${encodeURIComponent(song.trackName)}`
+        `https://api.lyrics.ovh/v1/${encodeURIComponent(
+          song.artistName
+        )}/${encodeURIComponent(song.trackName)}`
       );
       const data = await response.json();
-      setLyrics(data.lyrics || 'Lyrics not available for this song.');
+      setLyrics(data.lyrics || "Lyrics not available for this song.");
     } catch (error) {
-      setLyrics('Unable to fetch lyrics. Please try again later.');
+      setLyrics("Unable to fetch lyrics. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -763,11 +842,7 @@ const LyricsDisplay = ({ song }) => {
   return (
     <div className="lyrics-card">
       <h2 className="lyrics-title">Lyrics</h2>
-      {loading ? (
-        <Loader />
-      ) : (
-        <div className="lyrics-content">{lyrics}</div>
-      )}
+      {loading ? <Loader /> : <div className="lyrics-content">{lyrics}</div>}
     </div>
   );
 };
@@ -784,12 +859,14 @@ const App = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=12`
+        `https://itunes.apple.com/search?term=${encodeURIComponent(
+          query
+        )}&media=music&limit=12`
       );
       const data = await response.json();
       setSongs(data.results || []);
     } catch (error) {
-      console.error('Error fetching songs:', error);
+      console.error("Error fetching songs:", error);
       setSongs([]);
     } finally {
       setIsLoading(false);
@@ -802,10 +879,10 @@ const App = () => {
   };
 
   const toggleFavorite = (song) => {
-    setFavorites(prev => {
-      const exists = prev.some(f => f.trackId === song.trackId);
+    setFavorites((prev) => {
+      const exists = prev.some((f) => f.trackId === song.trackId);
       if (exists) {
-        return prev.filter(f => f.trackId !== song.trackId);
+        return prev.filter((f) => f.trackId !== song.trackId);
       } else {
         return [...prev, song];
       }
@@ -813,9 +890,9 @@ const App = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '150px' }}>
-      <Navbar />
-      
+    <div style={{ minHeight: "100vh", paddingBottom: "150px" }}>
+      <Navbar onLibraryClick={fetchLibrary} onFavoritesClick={fetchFavorites} />
+
       <div className="container py-5">
         <div className="hero-section">
           <h1 className="hero-title">Discover Your Favorite Music</h1>
@@ -835,10 +912,8 @@ const App = () => {
               onToggleFavorite={toggleFavorite}
               favorites={favorites}
             />
-            
-            {showLyrics && currentSong && (
-              <LyricsDisplay song={currentSong} />
-            )}
+
+            {showLyrics && currentSong && <LyricsDisplay song={currentSong} />}
           </>
         )}
       </div>
